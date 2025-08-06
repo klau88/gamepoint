@@ -17,12 +17,12 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => fake()->numberBetween(1, 99999999),
-            'date' => fake()->date(),
-            'time' => fake()->time(),
-            'country' => fake()->countryCode(),
-            'currency' => fake()->randomElement(['EUR', 'USD', 'CAD', 'GBP', 'NOK']),
-            'amount_in_cents' => fake()->numberbetween(1, 999999)
+            'user_id' => $this->faker->numberBetween(1, 99999999),
+            'date' => $this->faker->date(),
+            'time' => $this->faker->time(),
+            'country' => $this->faker->countryCode(),
+            'currency' => $this->faker->randomElement(['EUR', 'USD', 'CAD', 'GBP', 'NOK']),
+            'amount_in_cents' => $this->faker->numberbetween(1, 999999)
         ];
     }
 }

@@ -4,6 +4,7 @@ import {useForm} from '@inertiajs/vue3';
 import {ref} from 'vue';
 
 const props = defineProps({
+    errors: Object,
     orderedByUser: Object,
     sumPerUser: Object,
     orderedByCurrency: Object,
@@ -50,6 +51,7 @@ const pages = {
                     <div class="flex flex-row items-center">
                         <div class="px-2">
                             <input type="file" name="csv" @change="onFileChange">
+                            <div v-if="errors.file" class="text-red-500">{{ errors.file }}</div>
                         </div>
 
                         <div class="">

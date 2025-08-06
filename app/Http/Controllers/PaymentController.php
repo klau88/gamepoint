@@ -2,49 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payment;
+use App\Services\ConvertToEuroService;
+use App\Services\CsvUploadService;
+use App\Services\MapOrderService;
+use App\Services\PaginateService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Worksome\Exchange\Facades\Exchange;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Inertia\Response;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class PaymentController extends Controller
 {
-    public function dashboard()
+    /**
+     * @param PaginateService $paginateService
+     * @param ConvertToEuroService $convertToEuroService
+     * @return Response
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    public function dashboard(PaginateService $paginateService, MapOrderService $mapOrderService, ConvertToEuroService $convertToEuroService): Response
     {
-        $orderedByUser = $this->paginated(orderBy: 'user_id', pageName: 'usersPage');
+        $orderedByUser = $paginateService->payments(orderBy: 'user_id', pageName: 'usersPage');
+        $sumPerUser = $mapOrderService->map($orderedByUser['data']);
 
-        $sumPerUser = collect($orderedByUser['data'])->map(function ($amount, $userId) {
-            return [
-                'key' => $userId,
-                'value' => sprintf('%s %s', $amount['currency'], number_format($amount['amount'], 2))
-            ];
-        });
+        $orderedByCurrency = $paginateService->payments(orderBy: 'currency', pageName: 'currencyPage');
+        $totalRevenuePerCurrency = $mapOrderService->map($orderedByCurrency['data']);
 
-        $orderedByCurrency = $this->paginated(orderBy: 'currency', pageName: 'currencyPage');
-
-        $totalRevenuePerCurrency = collect($orderedByCurrency['data'])->map(function ($amount, $currency) {
-            return [
-                'key' => $currency,
-                'value' => sprintf('%s %s', $currency, number_format($amount['amount'], 2))
-            ];
-        });
-
-        $orderedByDate = $this->paginated(orderBy: 'date', order: 'desc', pageName: 'datePage');
-
-        $totalRevenuePerDay = collect($orderedByDate['data'])->map(function ($amount, $date) {
-            if ($amount['currency'] !== 'EUR') {
-                $exchangeRates = Exchange::rates($amount['currency'], ['EUR'])->getRates();
-                $rate = $exchangeRates['EUR'];
-
-                $amount['amount'] *= $rate;
-            }
-
-            return [
-                'key' => $date,
-                'value' => sprintf('€ %s', number_format($amount['amount'], 2))
-            ];
-        });
+        $orderedByDate = $paginateService->payments(orderBy: 'date', pageName: 'datePage', order: 'desc');
+        $totalRevenuePerDay = $convertToEuroService->convert($orderedByDate['data']);
 
         return Inertia::render('Payments/Dashboard', compact(
             'orderedByUser',
@@ -56,89 +43,18 @@ class PaymentController extends Controller
         ));
     }
 
-    public function uploadCsv($chunkSize = 100)
+    /**
+     * @param Request $request
+     * @param CsvUploadService $csvUploadService
+     * @param int $chunkSize
+     * @return RedirectResponse
+     */
+    public function uploadCsv(Request $request, CsvUploadService $csvUploadService, int $chunkSize = 100): RedirectResponse
     {
-        if (request()->hasFile('file')) {
-            $csv = request()->file('file')->store('uploads', 'public');
-            $csv = Storage::disk('public')->path($csv);
+        $request->validate(['file' => 'required|file|mimes:csv,txt|max:10240']);
 
-            $separator = ',';
-            $rows = [];
-            $count = 0;
-
-            $file = fopen($csv, 'r');
-            while ($row = fgetcsv($file, null, $separator)) {
-                $rows[] = $row;
-                $count++;
-
-                if ($count % $chunkSize === 0 && !empty($chunk)) {
-                    array_shift($rows);
-                    $this->createPayment($rows);
-
-                    $rows = [];
-                }
-            }
-            fclose($file);
-
-            if (!empty($rows)) {
-                array_shift($rows);
-                $this->createPayment($rows);
-            }
-        }
+        $csvUploadService->upload($request->file('file'), $chunkSize);
 
         return redirect()->route('payments.index');
-    }
-
-    protected function createPayment($rows)
-    {
-        foreach ($rows as $row) {
-            $date = date('Y-m-d', $row[1]);
-            $time = date('H:i:s', $row[1]);
-
-            Payment::firstOrCreate([
-                'user_id' => $row[0],
-                'date' => $date,
-                'time' => $time,
-                'country' => $row[2],
-                'currency' => $row[3],
-                'amount_in_cents' => $row[4]
-            ]);
-        }
-    }
-
-    protected function paginated($orderBy, $pageName, $order = 'asc', $perPage = 25, $chunkSize = 100)
-    {
-        $total = [];
-        Payment::orderBy($orderBy, $order)->chunk($chunkSize, function ($payments) use (&$total, $orderBy) {
-            foreach ($payments as $payment) {
-                $key = $payment[$orderBy];
-                $amount = ($payment['amount_in_cents'] / 100);
-                if (!isset($total[$key])) {
-                    $total[$key]['amount'] = 0;
-                    $total[$key]['currency'] = $payment['currency'];
-                    $total[$key]['date'] = $payment['date'];
-                }
-
-                $total[$key]['amount'] += $amount;
-            }
-        });
-
-        $page = request()->get($pageName, 1);
-        $collection = collect($total);
-        $paginatedItems = $collection->slice(($page - 1) * $perPage, $perPage)->all();
-
-        $paginated = (new LengthAwarePaginator(
-            $paginatedItems,
-            $collection->count(),
-            $perPage,
-            $page,
-            [
-                'path' => request()->url(),
-                'query' => request()->query(),
-                'pageName' => $pageName
-            ]
-        ))->toArray();
-
-        return $paginated;
     }
 }
