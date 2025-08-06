@@ -1,25 +1,26 @@
-# Laravel Coding Test (Dockerized with Sail)
+# Laravel Coding Test for Gamepoint (Dockerized with Sail)
 
 This is a fully self-contained Laravel application using [Laravel Sail](https://laravel.com/docs/sail) — a Docker-based development environment. No local PHP, Composer, or MySQL setup is required. Just Docker.
 
 ---
 
-## 🧰 Requirements
+##  Requirements
 
 - [Docker](https://www.docker.com/products/docker-desktop)
 - macOS, Linux, or WSL (Windows Subsystem for Linux)
 
 ---
 
-## 🚀 Quick Start (No Composer Required)
+##  Quick Start (No Composer Required)
+You can use Laravel Valet, Laravel Herd or Laravel Sail/Docker.
 
 You can start the app even if `composer` and `vendor/` are not installed locally:
 
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/yourusername/laravel-coding-test.git
-cd laravel-coding-test
+git clone git@github.com:klau88/gamepoint.git
+cd gamepoint
 
 2. ** Install dependencies and start Sail:**
 
@@ -40,14 +41,14 @@ vendor/bin/sail artisan migrate --seed
 4. **Open your browser:**
 http://localhost
 
-**🧰 Common Sail Commands**
+** Common Sail Commands**
 vendor/bin/sail up -d           # Start containers
 vendor/bin/sail down            # Stop containers
 vendor/bin/sail shell           # Enter container shell
 vendor/bin/sail artisan         # Run artisan commands
 vendor/bin/sail npm install     # Frontend setup (if applicable)
 
-**♻️ Reset Database**
+**♻ Reset Database**
 vendor/bin/sail artisan migrate:fresh --seed
 
 In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
