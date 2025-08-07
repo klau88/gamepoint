@@ -1,61 +1,68 @@
-# Laravel Coding Test for Gamepoint (Dockerized with Sail)
+## About this project
 
-This is a fully self-contained Laravel application using [Laravel Sail](https://laravel.com/docs/sail) — a Docker-based development environment. No local PHP, Composer, or MySQL setup is required. Just Docker.
+A Laravel 11 application built for Gamepoint to show payment data in different structures.
 
----
+This project includes some API routes which accept and return JSON so that it can be extended for API calls in the future. There is no authentication required to use the API routes for now. Authentication and authorization could be added in the future as well.
 
-##  Requirements
+To not have the home page be a 404, I have simply added a link there to the orders index page.
 
-- [Docker](https://www.docker.com/products/docker-desktop)
-- macOS, Linux, or WSL (Windows Subsystem for Linux)
+**URIs:**
+- `/` - Homepage
+- `/payments/dashboard` - Overview of payments
+- `/payments/upload-csv` - URL to upload a CSV
 
----
+## Requirements
+- PHP 8.2+
+- [Laravel 11](https://laravel.com/)
+- [Laravel Herd (or Valet)](https://herd.laravel.com/) or [Docker/Laravel Sail](https://laravel.com/docs/11.x/sail)
+- [Composer](https://getcomposer.org/)
+- [(Optional) Postman or any API testing tool](https://www.postman.com/downloads/)
 
-##  Quick Start (No Composer Required)
-You can use Laravel Valet, Laravel Herd or Laravel Sail/Docker.
+## After cloning this project
+**If you use Docker, here's how to install Composer dependencies if you don't have Composer installed:**<br>
+<pre><code>docker run --rm \
+-u "$(id -u):$(id -g)" \
+-v "$(pwd):/var/www/html" \
+-w /var/www/html \
+laravelsail/php82-composer:latest \
+composer install --ignore-platform-reqs</code></pre>
 
-You can start the app even if `composer` and `vendor/` are not installed locally:
+Optional: Replace php82 with the PHP version you're using.<br>
+For example: If you're using PHP 8.3 then replace 82 with 83.
 
-1. **Clone the repository:**
+**After installing Laravel Sail:**<br>
+`./vendor/bin/sail up -d`
 
-```bash
-git clone git@github.com:klau88/gamepoint.git
-cd gamepoint
+**Optional:**<br>
+Add an alias for `./vendor/bin/sail` at the bottom either your `.bashrc` or `.zshrc`:<br>
+`alias sail='sh $([ -f sail ] && echo sail || echo vendor/bin/sail)'`
+So whenever you need to use `./vendor/bin/sail`, you can just use `sail` or whatever your alias is.
 
-2. ** Install dependencies and start Sail:**
+**PHP Artisan**<br>
+Artisan commands are needed to install dependencies and run necessary commands like migrations.<br>
+- For Sail, it's `./vendor/bin/sail artisan`
+- For Laravel Herd/Valet or any other PHP install: `php artisan`
 
-docker run --rm \
-    -u "$(id -u):$(id -g)" \
-    -v $(pwd):/var/www/html \
-    -w /var/www/html \
-    laravelsail/php82-composer:latest \
-    composer install
+## Installation
+**Dependencies**<br>
+If you haven't installed Composer dependencies yet, run `composer install`
 
-# Start Sail (first time setup)
-vendor/bin/sail up -d
+**Environment**<br>
+`cp .env.example .env`
 
-3. **Run migrations and seeders:**
+**Run migrations:**<br>
+`./vendor/bin/sail artisan migrate` or `php artisan migrate`
 
-vendor/bin/sail artisan migrate --seed
+**Generate application key:**<br>
+`./vendor/bin/sail artisan key:generate` or `php artisan key:generate`
+For testing: `./vendor/bin/sail artisan key:generate --env=testing` or `php artisan key:generate --env=testing`
 
-4. **Open your browser:**
-http://localhost
+**NPM:**<br>
+- `npm install`
+- `npm run build`
 
-** Common Sail Commands**
-vendor/bin/sail up -d           # Start containers
-vendor/bin/sail down            # Stop containers
-vendor/bin/sail shell           # Enter container shell
-vendor/bin/sail artisan         # Run artisan commands
-vendor/bin/sail npm install     # Frontend setup (if applicable)
-
-**♻ Reset Database**
-vendor/bin/sail artisan migrate:fresh --seed
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Run tests:**<br>
+`./vendor/bin/sail artisan test` or `php artisan test`
 
 ## License
 
