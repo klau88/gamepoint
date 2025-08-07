@@ -2,9 +2,7 @@
 
 A Laravel 11 application built for Gamepoint to show payment data in different structures.
 
-This project includes some API routes which accept and return JSON so that it can be extended for API calls in the future. There is no authentication required to use the API routes for now. Authentication and authorization could be added in the future as well.
-
-To not have the home page be a 404, I have simply added a link there to the orders index page.
+To not have the home page be a 404, I have simply added a link there to the payments dashboard.
 
 **URIs:**
 - `/` - Homepage
